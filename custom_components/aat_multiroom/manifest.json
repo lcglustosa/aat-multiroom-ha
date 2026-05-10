@@ -1,7 +1,7 @@
 {
   "domain": "aat_multiroom",
   "name": "AAT Multiroom Digital",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "documentation": "https://github.com/lcglustosa/aat-multiroom-ha",
   "issue_tracker": "https://github.com/lcglustosa/aat-multiroom-ha/issues",
   "codeowners": ["@lcglustosa"],
