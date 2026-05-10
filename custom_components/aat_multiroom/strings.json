@@ -10,6 +10,15 @@
           "num_zones": "Number of zones (PMR-4 = 4, PMR-5/7 = 6, PMR-8 = 2)"
         }
       },
+      "reconfigure": {
+        "title": "Reconfigure connection",
+        "description": "Change the IP, TCP port, or number of zones. Useful for moving HA to the AAT's secondary TCP port (default 1024) so the AAT mobile app can keep using port 5000.",
+        "data": {
+          "host": "IP address",
+          "port": "TCP port",
+          "num_zones": "Number of zones"
+        }
+      },
       "naming": {
         "title": "Name your zones and inputs",
         "description": "Give each zone and input a friendly name. Leave an input blank to hide it. These names are what you'll use with Alexa (\"turn off the kitchen\" or \"play living room on Spotify\").",
@@ -31,7 +40,8 @@
       "cannot_connect": "Couldn't reach the AAT at that address. Check the IP, the TCP port, and that the AAT is powered on."
     },
     "abort": {
-      "already_configured": "This AAT is already configured."
+      "already_configured": "This AAT is already configured.",
+      "reconfigure_successful": "Connection settings updated."
     }
   },
   "options": {

@@ -10,6 +10,15 @@
           "num_zones": "Número de zonas (PMR-4 = 4, PMR-5/7 = 6, PMR-8 = 2)"
         }
       },
+      "reconfigure": {
+        "title": "Reconfigurar conexão",
+        "description": "Altere o IP, a porta TCP ou o número de zonas. Útil quando você quer usar a porta secundária do AAT (padrão 1024) para que o app oficial continue funcionando na porta 5000.",
+        "data": {
+          "host": "Endereço IP",
+          "port": "Porta TCP",
+          "num_zones": "Número de zonas"
+        }
+      },
       "naming": {
         "title": "Nomear zonas e entradas",
         "description": "Dê um nome amigável para cada zona e entrada. Deixe a entrada em branco para ocultá-la. Esses nomes são o que você vai usar com a Alexa (\"desliga a cozinha\" ou \"toca a sala no Spotify\").",
@@ -31,7 +40,8 @@
       "cannot_connect": "Não consegui falar com o AAT nesse endereço. Confira o IP, a porta TCP e se o AAT está ligado."
     },
     "abort": {
-      "already_configured": "Esse AAT já está configurado."
+      "already_configured": "Esse AAT já está configurado.",
+      "reconfigure_successful": "Configuração de conexão atualizada."
     }
   },
   "options": {

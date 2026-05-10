@@ -170,6 +170,57 @@ class AatConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         return AatOptionsFlow()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Allow changing host / TCP port / number of zones after install.
+
+        Useful when, for example, you want HA to use the AAT's secondary TCP
+        port (default 1024) so the AAT mobile app can keep using port 5000.
+        """
+        entry = self._get_reconfigure_entry()
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
+            num_zones = user_input[CONF_NUM_ZONES]
+            try:
+                await _async_test_connection(host, port, num_zones)
+            except AatError as err:
+                _LOGGER.warning("AAT reconfigure connection test failed: %s", err)
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data={
+                        **entry.data,
+                        CONF_HOST: host,
+                        CONF_PORT: port,
+                        CONF_NUM_ZONES: num_zones,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST, default=entry.data[CONF_HOST]
+                    ): str,
+                    vol.Optional(
+                        CONF_PORT,
+                        default=entry.data.get(CONF_PORT, DEFAULT_PORT),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+                    vol.Optional(
+                        CONF_NUM_ZONES,
+                        default=entry.data.get(CONF_NUM_ZONES, DEFAULT_NUM_ZONES),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=6)),
+                }
+            ),
+            errors=errors,
+        )
+
 
 class AatOptionsFlow(OptionsFlow):
     """Edit zone names and sources after initial setup.
