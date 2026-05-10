@@ -17,7 +17,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .aat_protocol import AAT_VOLUME_MAX as PROTOCOL_VOLUME_MAX  # noqa: F401 (alias)
 from .aat_protocol import AatError
 from .const import (
     AAT_VOLUME_MAX,
