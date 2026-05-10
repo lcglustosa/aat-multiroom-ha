@@ -32,7 +32,11 @@
           "source_1": "Nome da Entrada 1",
           "source_2": "Nome da Entrada 2",
           "source_3": "Nome da Entrada 3",
-          "source_4": "Nome da Entrada 4"
+          "source_4": "Nome da Entrada 4",
+          "source_5": "Nome da Entrada 5 (digital)",
+          "source_6": "Nome da Entrada 6 (digital)",
+          "source_7": "Nome da Entrada 7 (digital)",
+          "source_8": "Nome da Entrada 8 (digital)"
         }
       }
     },
@@ -59,7 +63,11 @@
           "source_1": "Nome da Entrada 1",
           "source_2": "Nome da Entrada 2",
           "source_3": "Nome da Entrada 3",
-          "source_4": "Nome da Entrada 4"
+          "source_4": "Nome da Entrada 4",
+          "source_5": "Nome da Entrada 5 (digital)",
+          "source_6": "Nome da Entrada 6 (digital)",
+          "source_7": "Nome da Entrada 7 (digital)",
+          "source_8": "Nome da Entrada 8 (digital)"
         }
       }
     }

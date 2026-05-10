@@ -48,14 +48,17 @@ class AatPowerSwitch(CoordinatorEntity[AatCoordinator], SwitchEntity):
 
     def __init__(self, coordinator: AatCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
-        host = entry.data[CONF_HOST]
-        self._attr_unique_id = f"{host}_power"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, host)},
-            name=f"AAT Multiroom ({host})",
+        self._host = entry.data[CONF_HOST]
+        self._attr_unique_id = f"{self._host}_power"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._host)},
+            name=f"AAT Multiroom ({self._host})",
             manufacturer="Advanced Audio Technologies",
-            model=coordinator.data.model if coordinator.data else "AAT Multiroom",
-            sw_version=coordinator.data.firmware if coordinator.data else None,
+            model=self.coordinator.data.model if self.coordinator.data else "AAT Multiroom",
+            sw_version=self.coordinator.data.firmware if self.coordinator.data else None,
         )
 
     @property

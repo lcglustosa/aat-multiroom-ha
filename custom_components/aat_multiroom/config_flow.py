@@ -31,6 +31,7 @@ from .const import (
     DEFAULT_NUM_ZONES,
     DEFAULT_PORT,
     DOMAIN,
+    MODEL_INPUTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,14 +68,14 @@ def _default_zone_names(num_zones: int) -> dict[str, str]:
     return {str(i): f"Zona {i}" for i in range(1, num_zones + 1)}
 
 
-def _default_sources() -> dict[str, str]:
-    """Default source names — the user customizes per their actual hookup."""
-    return {
-        "1": "Entrada 1",
-        "2": "Entrada 2",
-        "3": "Entrada 3",
-        "4": "Entrada 4",
-    }
+def _default_sources(num_inputs: int = 4) -> dict[str, str]:
+    """Default source names for the given number of inputs."""
+    return {str(i): f"Entrada {i}" for i in range(1, num_inputs + 1)}
+
+
+def _num_inputs_for_model(model: str) -> int:
+    """Return the number of inputs for a given model string, defaulting to 4."""
+    return MODEL_INPUTS.get(model.upper(), 4)
 
 
 class AatConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -124,6 +125,8 @@ class AatConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Collect friendly names for zones and sources."""
         num_zones = self._connection[CONF_NUM_ZONES]
+        model = self._connection.get("model", "")
+        num_inputs = _num_inputs_for_model(model)
 
         if user_input is not None:
             zone_names = {
@@ -131,14 +134,15 @@ class AatConfigFlow(ConfigFlow, domain=DOMAIN):
             }
             sources = {
                 str(i): user_input[f"source_{i}"]
-                for i in range(1, 5)
+                for i in range(1, num_inputs + 1)
                 if user_input.get(f"source_{i}", "").strip()
             }
-            title = self._connection.get("model") or "AAT Multiroom"
+            title = model or "AAT Multiroom"
             data = {
                 CONF_HOST: self._connection[CONF_HOST],
                 CONF_PORT: self._connection[CONF_PORT],
                 CONF_NUM_ZONES: num_zones,
+                "model": model,
             }
             options = {
                 CONF_ZONE_NAMES: zone_names,
@@ -147,15 +151,14 @@ class AatConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=title, data=data, options=options)
 
         zone_defaults = _default_zone_names(num_zones)
-        source_defaults = _default_sources()
+        source_defaults = _default_sources(num_inputs)
 
         schema_dict: dict[Any, Any] = {}
         for i in range(1, num_zones + 1):
             schema_dict[
                 vol.Required(f"zone_{i}", default=zone_defaults[str(i)])
             ] = str
-        # Always offer 4 source slots; blanks are dropped.
-        for i in range(1, 5):
+        for i in range(1, num_inputs + 1):
             schema_dict[
                 vol.Optional(f"source_{i}", default=source_defaults[str(i)])
             ] = str
@@ -186,7 +189,7 @@ class AatConfigFlow(ConfigFlow, domain=DOMAIN):
             port = user_input[CONF_PORT]
             num_zones = user_input[CONF_NUM_ZONES]
             try:
-                await _async_test_connection(host, port, num_zones)
+                model, firmware = await _async_test_connection(host, port, num_zones)
             except AatError as err:
                 _LOGGER.warning("AAT reconfigure connection test failed: %s", err)
                 errors["base"] = "cannot_connect"
@@ -198,6 +201,7 @@ class AatConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: host,
                         CONF_PORT: port,
                         CONF_NUM_ZONES: num_zones,
+                        "model": model,
                     },
                 )
 
@@ -234,11 +238,14 @@ class AatOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         num_zones = self.config_entry.data[CONF_NUM_ZONES]
+        model = self.config_entry.data.get("model", "")
+        num_inputs = _num_inputs_for_model(model)
+
         current_zone_names: dict[str, str] = (
             self.config_entry.options.get(CONF_ZONE_NAMES) or _default_zone_names(num_zones)
         )
         current_sources: dict[str, str] = (
-            self.config_entry.options.get(CONF_SOURCES) or _default_sources()
+            self.config_entry.options.get(CONF_SOURCES) or _default_sources(num_inputs)
         )
 
         if user_input is not None:
@@ -247,7 +254,7 @@ class AatOptionsFlow(OptionsFlow):
             }
             sources = {
                 str(i): user_input[f"source_{i}"]
-                for i in range(1, 5)
+                for i in range(1, num_inputs + 1)
                 if user_input.get(f"source_{i}", "").strip()
             }
             return self.async_create_entry(
@@ -265,7 +272,7 @@ class AatOptionsFlow(OptionsFlow):
                     f"zone_{i}", default=current_zone_names.get(str(i), f"Zona {i}")
                 )
             ] = str
-        for i in range(1, 5):
+        for i in range(1, num_inputs + 1):
             schema_dict[
                 vol.Optional(f"source_{i}", default=current_sources.get(str(i), ""))
             ] = str

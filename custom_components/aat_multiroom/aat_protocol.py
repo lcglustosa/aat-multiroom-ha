@@ -217,7 +217,7 @@ class AatClient:
                 await self.disconnect()
                 raise AatConnectionError(f"Write failed: {err}") from err
 
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             deadline = loop.time() + RESPONSE_TIMEOUT
             while True:
                 remaining = deadline - loop.time()
@@ -313,6 +313,46 @@ class AatClient:
         # Reply is e.g. "Multiroom V1.13" — return the joined tail.
         return " ".join(params) if params else ""
 
+    async def zone_on_all(self) -> None:
+        """Take all zones out of stand-by in one command (ZTONALL)."""
+        await self.send("ZTONALL")
+
+    async def zone_off_all(self) -> None:
+        """Put all zones in stand-by in one command (ZSTDBYALL)."""
+        await self.send("ZSTDBYALL")
+
+    async def mute_all(self) -> None:
+        """Mute all zones simultaneously."""
+        await self.send("MUTEALL")
+
+    async def unmute_all(self) -> None:
+        """Unmute all zones simultaneously."""
+        await self.send("UNMUTEALL")
+
+    async def reset(self) -> None:
+        """Reboot the AAT device over the network."""
+        await self.send("RESET")
+
+    async def set_bass(self, zone: int, value: int) -> None:
+        """Set bass for a zone. value: 0..14 (7 = 0 dB)."""
+        v = max(0, min(14, int(value)))
+        await self.send("BASSSET", zone, v)
+
+    async def set_treble(self, zone: int, value: int) -> None:
+        """Set treble for a zone. value: 0..14 (7 = 0 dB)."""
+        v = max(0, min(14, int(value)))
+        await self.send("TREBLESET", zone, v)
+
+    async def set_balance(self, zone: int, value: int) -> None:
+        """Set balance for a zone. value: 0..20 (10 = center)."""
+        v = max(0, min(20, int(value)))
+        await self.send("BALSET", zone, v)
+
+    async def set_preamp(self, zone: int, value: int) -> None:
+        """Set preamp gain for a zone. value: 0..7 (0 = 0 dB, 7 = +14 dB)."""
+        v = max(0, min(7, int(value)))
+        await self.send("PREAMPSET", zone, v)
+
     async def get_all(self) -> DeviceState:
         """Read MODEL/VER/POWER + per-zone state in one call.
 
@@ -360,10 +400,15 @@ class AatClient:
             zone += 1
 
         # Stand-by is not returned by GETALL — pull it per zone.
-        for z_num in state.zones:
-            try:
-                state.zones[z_num].standby = await self.zone_get_standby(z_num)
-            except AatError as err:
-                _LOGGER.warning("Could not read standby for zone %s: %s", z_num, err)
+        # Skip when device is OFF: all zones are implicitly in stand-by.
+        if state.power:
+            for z_num in state.zones:
+                try:
+                    state.zones[z_num].standby = await self.zone_get_standby(z_num)
+                except AatError as err:
+                    _LOGGER.warning("Could not read standby for zone %s: %s", z_num, err)
+        else:
+            for z_num in state.zones:
+                state.zones[z_num].standby = True
 
         return state

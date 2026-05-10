@@ -32,7 +32,11 @@
           "source_1": "Input 1 name",
           "source_2": "Input 2 name",
           "source_3": "Input 3 name",
-          "source_4": "Input 4 name"
+          "source_4": "Input 4 name",
+          "source_5": "Input 5 name (digital)",
+          "source_6": "Input 6 name (digital)",
+          "source_7": "Input 7 name (digital)",
+          "source_8": "Input 8 name (digital)"
         }
       }
     },
@@ -59,7 +63,11 @@
           "source_1": "Input 1 name",
           "source_2": "Input 2 name",
           "source_3": "Input 3 name",
-          "source_4": "Input 4 name"
+          "source_4": "Input 4 name",
+          "source_5": "Input 5 name (digital)",
+          "source_6": "Input 6 name (digital)",
+          "source_7": "Input 7 name (digital)",
+          "source_8": "Input 8 name (digital)"
         }
       }
     }

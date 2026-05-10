@@ -1,14 +1,11 @@
-"""Quick local sanity tests for the AAT protocol parser/encoder.
+"""Tests for the AAT protocol parser/encoder.
 
-Run from the repo root:
-    python tests/test_protocol.py
-
-These tests use only the standard library so they work without HA installed.
+Run with:  pytest tests/ -v
+Also runnable standalone: python tests/test_protocol.py
 """
 from __future__ import annotations
 
 import asyncio
-import io
 import sys
 from pathlib import Path
 
@@ -23,71 +20,86 @@ from aat_protocol import (  # noqa: E402
 )
 
 
-def _check(label: str, got, expected) -> None:
-    status = "OK " if got == expected else "FAIL"
-    print(f"  [{status}] {label}: got={got!r} expected={expected!r}")
-    if got != expected:
-        sys.exit(1)
+# ---------------------------------------------------------------------------
+# encode_command
+# ---------------------------------------------------------------------------
+
+def test_encode_pwron():
+    assert encode_command(1, "PWRON") == b"[t001 PWRON]"
+
+def test_encode_pwrtog():
+    assert encode_command(2, "PWRTOG") == b"[t002 PWRTOG]"
+
+def test_encode_volset():
+    assert encode_command(1, "VOLSET", 1, 15) == b"[t001 VOLSET 1 15]"
+
+def test_encode_volget():
+    assert encode_command(2, "VOLGET", 4) == b"[t002 VOLGET 4]"
+
+def test_encode_inpset():
+    assert encode_command(1, "INPSET", 1, 1) == b"[t001 INPSET 1 1]"
+
+def test_encode_zstdbyon():
+    assert encode_command(7, "ZSTDBYON", 1) == b"[t007 ZSTDBYON 1]"
+
+def test_encode_seq_max():
+    assert encode_command(999, "PWRON") == b"[t999 PWRON]"
 
 
-def test_encode() -> None:
-    print("encode_command:")
-    _check("PWRON",   encode_command(1, "PWRON"),                b"[t001 PWRON]")
-    _check("PWRTOG",  encode_command(2, "PWRTOG"),               b"[t002 PWRTOG]")
-    _check("VOLSET",  encode_command(1, "VOLSET", 1, 15),        b"[t001 VOLSET 1 15]")
-    _check("VOLGET",  encode_command(2, "VOLGET", 4),            b"[t002 VOLGET 4]")
-    _check("INPSET",  encode_command(1, "INPSET", 1, 1),         b"[t001 INPSET 1 1]")
-    _check("ZSTDBYON", encode_command(7, "ZSTDBYON", 1),         b"[t007 ZSTDBYON 1]")
-    _check("seq=999", encode_command(999, "PWRON"),              b"[t999 PWRON]")
+# ---------------------------------------------------------------------------
+# parse_message
+# ---------------------------------------------------------------------------
+
+def test_parse_pwron_reply():
+    assert parse_message("[r001 PWRON]") == ("r", 1, "PWRON", [])
+
+def test_parse_pwrtog_on():
+    assert parse_message("[r001 PWRTOG ON]") == ("r", 1, "PWRTOG", ["ON"])
+
+def test_parse_volget():
+    assert parse_message("[r002 VOLGET 4 40]") == ("r", 2, "VOLGET", ["4", "40"])
+
+def test_parse_volset():
+    assert parse_message("[r001 VOLSET 1 15]") == ("r", 1, "VOLSET", ["1", "15"])
+
+def test_parse_zstdbyget_on():
+    assert parse_message("[r001 ZSTDBYGET 4 ON]") == ("r", 1, "ZSTDBYGET", ["4", "ON"])
+
+def test_parse_muteget():
+    assert parse_message("[r002 MUTEGET 4 OFF]") == ("r", 2, "MUTEGET", ["4", "OFF"])
+
+def test_parse_notification_powerdown():
+    assert parse_message("[n001 POWERDOWN]") == ("n", 1, "POWERDOWN", [])
+
+def test_parse_model_uppercase():
+    assert parse_message("[R001 MODEL PMR4]") == ("r", 1, "MODEL", ["PMR4"])
+
+def test_parse_ver_multi_token():
+    assert parse_message("[R001 VER Multiroom V1.13]") == ("r", 1, "VER", ["Multiroom", "V1.13"])
+
+def test_parse_lowercase_type():
+    assert parse_message("[t005 VOLSET 1 15]") == ("t", 5, "VOLSET", ["1", "15"])
+
+def test_parse_garbage_returns_none():
+    assert parse_message("not a message") is None
+
+def test_parse_muteall():
+    assert parse_message("[r001 MUTEALL]") == ("r", 1, "MUTEALL", [])
+
+def test_parse_ztonall():
+    assert parse_message("[r001 ZTONALL]") == ("r", 1, "ZTONALL", [])
+
+def test_parse_bassset():
+    assert parse_message("[r001 BASSSET 1 14]") == ("r", 1, "BASSSET", ["1", "14"])
+
+def test_parse_balset():
+    assert parse_message("[r001 BALSET 2 10]") == ("r", 1, "BALSET", ["2", "10"])
 
 
-def test_parse() -> None:
-    print("parse_message:")
+# ---------------------------------------------------------------------------
+# get_all — PMR-7 spec example (6 zones)
+# ---------------------------------------------------------------------------
 
-    _check("PWRON reply",
-           parse_message("[r001 PWRON]"),
-           ("r", 1, "PWRON", []))
-
-    _check("PWRTOG ON",
-           parse_message("[r001 PWRTOG ON]"),
-           ("r", 1, "PWRTOG", ["ON"]))
-
-    _check("VOLGET",
-           parse_message("[r002 VOLGET 4 40]"),
-           ("r", 2, "VOLGET", ["4", "40"]))
-
-    _check("VOLSET",
-           parse_message("[r001 VOLSET 1 15]"),
-           ("r", 1, "VOLSET", ["1", "15"]))
-
-    _check("ZSTDBYGET ON",
-           parse_message("[r001 ZSTDBYGET 4 ON]"),
-           ("r", 1, "ZSTDBYGET", ["4", "ON"]))
-
-    _check("MUTEGET",
-           parse_message("[r002 MUTEGET 4 OFF]"),
-           ("r", 2, "MUTEGET", ["4", "OFF"]))
-
-    _check("notification POWERDOWN",
-           parse_message("[n001 POWERDOWN]"),
-           ("n", 1, "POWERDOWN", []))
-
-    _check("MODEL",
-           parse_message("[R001 MODEL PMR4]"),
-           ("r", 1, "MODEL", ["PMR4"]))
-
-    _check("VER (multi-token reply)",
-           parse_message("[R001 VER Multiroom V1.13]"),
-           ("r", 1, "VER", ["Multiroom", "V1.13"]))
-
-    _check("Lowercase type",
-           parse_message("[t005 VOLSET 1 15]"),
-           ("t", 5, "VOLSET", ["1", "15"]))
-
-    _check("Garbage returns None", parse_message("not a message"), None)
-
-
-# Spec example 10.2 for PMR-7 (6 zones):
 SPEC_PMR7_GETALL = (
     "PMR7 V1.13 OFF 12345 60 "
     "6 30 OFF 14 14 20 7 "  # zone 1
@@ -107,10 +119,8 @@ class _FakeStream:
         self._writes: list[bytes] = []
         self._buf = b""
 
-    # Writer side
     def write(self, data: bytes) -> None:
         self._writes.append(data)
-        # Pop the next canned reply into the read buffer.
         if self._replies:
             self._buf += self._replies.pop(0)
 
@@ -126,10 +136,8 @@ class _FakeStream:
     async def wait_closed(self) -> None:
         return None
 
-    # Reader side
     async def read(self, n: int) -> bytes:
         if not self._buf:
-            # Block forever — but tests should always have data ready.
             await asyncio.sleep(0.001)
             return b""
         chunk = self._buf[:n]
@@ -137,17 +145,51 @@ class _FakeStream:
         return chunk
 
 
-def test_getall_parsing() -> None:
-    print("get_all (PMR-7 spec example):")
+def test_getall_pmr7():
+    """Parse the spec example for PMR-7 (6 zones, device OFF → standby skipped)."""
 
     async def run() -> DeviceState:
         client = AatClient("dummy", num_zones=6)
-        # Reply uses the seq from the request, which starts at 1.
         reply = f"[r001 GETALL {SPEC_PMR7_GETALL}]".encode("ascii")
-        # Plus 6 ZSTDBYGET replies (zones 1..6, all OFF = playing)
+        # Device is OFF in the spec example, so ZSTDBYGET is NOT called.
+        stream = _FakeStream([reply])
+        client._reader = stream  # type: ignore[assignment]
+        client._writer = stream  # type: ignore[assignment]
+        return await client.get_all()
+
+    state = asyncio.run(run())
+
+    assert state.model == "PMR7"
+    assert state.firmware == "V1.13"
+    assert state.power is False
+    assert len(state.zones) == 6
+
+    z1 = state.zones[1]
+    assert z1.input == 6
+    assert z1.volume == 30
+    assert z1.mute is False
+    assert z1.bass == 14
+    assert z1.treble == 14
+    assert z1.balance == 20
+    assert z1.preamp == 7
+    # Device is OFF → all zones set to standby=True without ZSTDBYGET
+    assert z1.standby is True
+
+    z6 = state.zones[6]
+    assert z6.input == 5
+    assert z6.volume == 30
+
+
+def test_getall_power_on_fetches_standby():
+    """When device is ON, ZSTDBYGET is called per zone."""
+
+    async def run() -> DeviceState:
+        client = AatClient("dummy", num_zones=2)
+        getall_payload = "PMR4 V1.17 ON 5000 0 1 20 OFF 7 7 10 0 2 15 OFF 7 7 10 0"
+        reply = f"[r001 GETALL {getall_payload}]".encode("ascii")
         zstdby_replies = [
             f"[r{i + 2:03d} ZSTDBYGET {i + 1} OFF]".encode("ascii")
-            for i in range(6)
+            for i in range(2)
         ]
         stream = _FakeStream([reply, *zstdby_replies])
         client._reader = stream  # type: ignore[assignment]
@@ -156,28 +198,51 @@ def test_getall_parsing() -> None:
 
     state = asyncio.run(run())
 
-    _check("model",    state.model,    "PMR7")
-    _check("firmware", state.firmware, "V1.13")
-    _check("power",    state.power,    False)
-    _check("zones #",  len(state.zones), 6)
+    assert state.power is True
+    assert state.zones[1].standby is False
+    assert state.zones[2].standby is False
 
-    z1 = state.zones[1]
-    _check("zone1 input",   z1.input,   6)
-    _check("zone1 volume",  z1.volume,  30)
-    _check("zone1 mute",    z1.mute,    False)
-    _check("zone1 bass",    z1.bass,    14)
-    _check("zone1 treble",  z1.treble,  14)
-    _check("zone1 balance", z1.balance, 20)
-    _check("zone1 preamp",  z1.preamp,  7)
-    _check("zone1 standby (from ZSTDBYGET)", z1.standby, False)
 
-    z6 = state.zones[6]
-    _check("zone6 input",  z6.input,  5)
-    _check("zone6 volume", z6.volume, 30)
+# ---------------------------------------------------------------------------
+# Volume/brightness helpers (inline — avoids importing HA deps from light.py)
+# ---------------------------------------------------------------------------
+
+AAT_VOLUME_MAX = 87
+
+
+def _volume_to_brightness(volume: int) -> int:
+    if volume <= 0:
+        return 0
+    return max(1, round(volume / AAT_VOLUME_MAX * 255))
+
+
+def _brightness_to_volume(brightness: int) -> int:
+    if brightness <= 0:
+        return 0
+    return max(1, round(brightness / 255 * AAT_VOLUME_MAX))
+
+
+def test_volume_to_brightness_zero():
+    assert _volume_to_brightness(0) == 0
+
+def test_volume_to_brightness_max():
+    assert _volume_to_brightness(87) == 255
+
+def test_brightness_to_volume_zero():
+    assert _brightness_to_volume(0) == 0
+
+def test_brightness_to_volume_max():
+    assert _brightness_to_volume(255) == 87
+
+def test_brightness_roundtrip():
+    for vol in range(0, 88):
+        b = _volume_to_brightness(vol)
+        v2 = _brightness_to_volume(b)
+        assert abs(v2 - vol) <= 1, f"roundtrip failed for volume {vol}: got {v2}"
 
 
 if __name__ == "__main__":
-    test_encode()
-    test_parse()
-    test_getall_parsing()
-    print("\nAll protocol tests passed.")
+    # Keep standalone execution for quick local runs without pytest.
+    import subprocess, sys
+    result = subprocess.run([sys.executable, "-m", "pytest", __file__, "-v"], check=False)
+    sys.exit(result.returncode)

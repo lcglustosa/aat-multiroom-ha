@@ -12,7 +12,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -90,18 +90,21 @@ class AatZoneMediaPlayer(CoordinatorEntity[AatCoordinator], MediaPlayerEntity):
         super().__init__(coordinator)
         self._entry = entry
         self._zone = zone
+        self._host = entry.data[CONF_HOST]
         self._sources_map = dict(sources)  # input number (str) -> friendly name
         self._sources_inverse = {v: int(k) for k, v in self._sources_map.items()}
 
-        host = entry.data[CONF_HOST]
-        self._attr_unique_id = f"{host}_zone_{zone}"
+        self._attr_unique_id = f"{self._host}_zone_{zone}"
         self._attr_name = zone_name
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, host)},
-            name=f"AAT Multiroom ({host})",
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._host)},
+            name=f"AAT Multiroom ({self._host})",
             manufacturer="Advanced Audio Technologies",
-            model=coordinator.data.model if coordinator.data else "AAT Multiroom",
-            sw_version=coordinator.data.firmware if coordinator.data else None,
+            model=self.coordinator.data.model if self.coordinator.data else "AAT Multiroom",
+            sw_version=self.coordinator.data.firmware if self.coordinator.data else None,
         )
 
     # --- helpers ------------------------------------------------------------
@@ -169,7 +172,11 @@ class AatZoneMediaPlayer(CoordinatorEntity[AatCoordinator], MediaPlayerEntity):
     async def async_turn_on(self) -> None:
         # Make sure the device itself is powered up first.
         if self.coordinator.data and not self.coordinator.data.power:
-            await self.coordinator.client.power_on()
+            try:
+                await self.coordinator.client.power_on()
+            except AatError as err:
+                _LOGGER.error("PWRON failed: %s", err)
+                raise
         await self._run_and_refresh(self.coordinator.client.zone_on(self._zone))
 
     async def async_turn_off(self) -> None:
@@ -207,11 +214,3 @@ class AatZoneMediaPlayer(CoordinatorEntity[AatCoordinator], MediaPlayerEntity):
         await self._run_and_refresh(
             self.coordinator.client.set_input(self._zone, input_num)
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        # Refresh device_info model/firmware once we've heard back at least once.
-        if self.coordinator.data and not self._attr_device_info.get("sw_version"):
-            self._attr_device_info["model"] = self.coordinator.data.model
-            self._attr_device_info["sw_version"] = self.coordinator.data.firmware
-        super()._handle_coordinator_update()
