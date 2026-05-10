@@ -7,6 +7,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+# Pre-import platform modules at integration load time so that
+# async_forward_entry_setups doesn't trigger a blocking import inside the
+# event loop (HA logs that as a "blocking call to import_module" error).
+from . import media_player  # noqa: F401
 from .const import DOMAIN
 from .coordinator import AatCoordinator
 

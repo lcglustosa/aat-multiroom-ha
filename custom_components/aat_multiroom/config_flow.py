@@ -168,14 +168,16 @@ class AatConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        return AatOptionsFlow(config_entry)
+        return AatOptionsFlow()
 
 
 class AatOptionsFlow(OptionsFlow):
-    """Edit zone names and sources after initial setup."""
+    """Edit zone names and sources after initial setup.
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        self.config_entry = config_entry
+    Note: do NOT set ``self.config_entry`` manually — the framework provides it
+    automatically since HA 2024.11 and explicit assignment is deprecated
+    (will stop working in HA 2025.12).
+    """
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
