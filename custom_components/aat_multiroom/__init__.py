@@ -10,13 +10,17 @@ from homeassistant.core import HomeAssistant
 # Pre-import platform modules at integration load time so that
 # async_forward_entry_setups doesn't trigger a blocking import inside the
 # event loop (HA logs that as a "blocking call to import_module" error).
-from . import media_player, switch  # noqa: F401
+from . import light, media_player, switch  # noqa: F401
 from .const import DOMAIN
 from .coordinator import AatCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.MEDIA_PLAYER,
+    Platform.SWITCH,
+    Platform.LIGHT,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
