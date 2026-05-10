@@ -1,0 +1,57 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Conectar ao AAT Multiroom",
+        "description": "Digite o IP do seu amplificador AAT. A porta TCP padrão é 5000.",
+        "data": {
+          "host": "Endereço IP",
+          "port": "Porta TCP",
+          "num_zones": "Número de zonas (PMR-4 = 4, PMR-5/7 = 6, PMR-8 = 2)"
+        }
+      },
+      "naming": {
+        "title": "Nomear zonas e entradas",
+        "description": "Dê um nome amigável para cada zona e entrada. Deixe a entrada em branco para ocultá-la. Esses nomes são o que você vai usar com a Alexa (\"desliga a cozinha\" ou \"toca a sala no Spotify\").",
+        "data": {
+          "zone_1": "Nome da Zona 1",
+          "zone_2": "Nome da Zona 2",
+          "zone_3": "Nome da Zona 3",
+          "zone_4": "Nome da Zona 4",
+          "zone_5": "Nome da Zona 5",
+          "zone_6": "Nome da Zona 6",
+          "source_1": "Nome da Entrada 1",
+          "source_2": "Nome da Entrada 2",
+          "source_3": "Nome da Entrada 3",
+          "source_4": "Nome da Entrada 4"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Não consegui falar com o AAT nesse endereço. Confira o IP, a porta TCP e se o AAT está ligado."
+    },
+    "abort": {
+      "already_configured": "Esse AAT já está configurado."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Editar nomes",
+        "description": "Atualize os nomes amigáveis das zonas e entradas. Deixe em branco para ocultar uma entrada.",
+        "data": {
+          "zone_1": "Nome da Zona 1",
+          "zone_2": "Nome da Zona 2",
+          "zone_3": "Nome da Zona 3",
+          "zone_4": "Nome da Zona 4",
+          "zone_5": "Nome da Zona 5",
+          "zone_6": "Nome da Zona 6",
+          "source_1": "Nome da Entrada 1",
+          "source_2": "Nome da Entrada 2",
+          "source_3": "Nome da Entrada 3",
+          "source_4": "Nome da Entrada 4"
+        }
+      }
+    }
+  }
+}

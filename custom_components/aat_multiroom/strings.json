@@ -1,0 +1,57 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to AAT Multiroom",
+        "description": "Enter the IP address of your AAT amplifier. The default TCP port is 5000.",
+        "data": {
+          "host": "IP address",
+          "port": "TCP port",
+          "num_zones": "Number of zones (PMR-4 = 4, PMR-5/7 = 6, PMR-8 = 2)"
+        }
+      },
+      "naming": {
+        "title": "Name your zones and inputs",
+        "description": "Give each zone and input a friendly name. Leave an input blank to hide it. These names are what you'll use with Alexa (\"turn off the kitchen\" or \"play living room on Spotify\").",
+        "data": {
+          "zone_1": "Zone 1 name",
+          "zone_2": "Zone 2 name",
+          "zone_3": "Zone 3 name",
+          "zone_4": "Zone 4 name",
+          "zone_5": "Zone 5 name",
+          "zone_6": "Zone 6 name",
+          "source_1": "Input 1 name",
+          "source_2": "Input 2 name",
+          "source_3": "Input 3 name",
+          "source_4": "Input 4 name"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Couldn't reach the AAT at that address. Check the IP, the TCP port, and that the AAT is powered on."
+    },
+    "abort": {
+      "already_configured": "This AAT is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit names",
+        "description": "Update the friendly names for zones and inputs. Leave an input blank to hide it.",
+        "data": {
+          "zone_1": "Zone 1 name",
+          "zone_2": "Zone 2 name",
+          "zone_3": "Zone 3 name",
+          "zone_4": "Zone 4 name",
+          "zone_5": "Zone 5 name",
+          "zone_6": "Zone 6 name",
+          "source_1": "Input 1 name",
+          "source_2": "Input 2 name",
+          "source_3": "Input 3 name",
+          "source_4": "Input 4 name"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,76 @@
+# Automações de exemplo para o AAT Multiroom.
+# Cole no seu automations.yaml ou recrie via UI.
+#
+# Substitua os entity_ids pelos seus reais antes de usar.
+
+# Desliga tudo automaticamente às 23h.
+- alias: "AAT - Desligar tudo às 23h"
+  description: "Coloca todas as zonas em stand-by no fim do dia."
+  trigger:
+    - platform: time
+      at: "23:00:00"
+  action:
+    - service: scene.turn_on
+      target:
+        entity_id: scene.boa_noite
+
+# Quando ninguém está em casa, desliga as zonas (via integração de
+# presença, ex.: zone.home).
+- alias: "AAT - Casa vazia, desligar zonas"
+  description: "Se todos saíram, desliga todas as zonas do AAT."
+  trigger:
+    - platform: state
+      entity_id: zone.home
+      to: "0"
+  action:
+    - service: media_player.turn_off
+      target:
+        entity_id:
+          - media_player.sala
+          - media_player.cozinha
+          - media_player.quarto
+          - media_player.varanda
+
+# Notifica quando o AAT detecta queda de energia (POWERDOWN).
+# A integração loga isso como mensagem; pra reagir programaticamente você
+# pode acompanhar o estado do device — quando ele volta de "unavailable"
+# pra disponível, sabemos que tinha caído.
+- alias: "AAT - Avisar se ficar offline"
+  description: "Manda notificação se o AAT ficar inacessível por mais de 2 minutos."
+  trigger:
+    - platform: state
+      entity_id: media_player.sala  # qualquer zona serve
+      to: "unavailable"
+      for:
+        minutes: 2
+  action:
+    - service: notify.mobile_app_seu_iphone   # troque pelo nome do seu device
+      data:
+        title: "AAT offline"
+        message: "Multiroom AAT não responde há mais de 2 minutos."
+
+# Restaura cena de música quando você chega em casa de manhã.
+- alias: "AAT - Bom dia, música no café"
+  description: "Liga música baixa na cozinha/sala quando alguém chega antes das 11h."
+  trigger:
+    - platform: state
+      entity_id: zone.home
+      from: "0"
+  condition:
+    - condition: time
+      after: "06:00:00"
+      before: "11:00:00"
+  action:
+    - service: media_player.turn_on
+      target:
+        entity_id: media_player.cozinha
+    - service: media_player.select_source
+      target:
+        entity_id: media_player.cozinha
+      data:
+        source: "Spotify"
+    - service: media_player.volume_set
+      target:
+        entity_id: media_player.cozinha
+      data:
+        volume_level: 0.25

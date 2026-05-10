@@ -1,0 +1,119 @@
+# Cenas de exemplo para o AAT Multiroom no Home Assistant.
+#
+# COMO USAR:
+#   1. Substitua os entity_ids abaixo pelos seus reais.
+#      Os seus serão algo como `media_player.sala`, `media_player.cozinha`,
+#      etc., dependendo dos nomes que você deu durante o setup da integração.
+#      Para conferir: Configurações → Dispositivos e Serviços → AAT Multiroom →
+#      clique no dispositivo e veja os entity_ids das zonas.
+#
+#   2. Substitua os nomes de fonte ("Spotify", "TV") pelos que você cadastrou.
+#
+#   3. Cole o conteúdo no seu `scenes.yaml`. Se você usa só a UI para cenas,
+#      crie cada uma manualmente em Configurações → Automações e Cenas → Cenas
+#      usando os mesmos valores.
+#
+#   4. Reinicie o HA (ou use Developer Tools → YAML → Recarregar Cenas).
+#
+#   5. Para expor à Casa/Siri: na HomeKit Bridge, marque cada cena
+#      em Entidades. Cada cena vira um botão na Casa e responde por voz.
+#
+# ----------------------------------------------------------------------------
+
+# Música em todo lugar — todas as zonas ligadas, fonte 1, volume confortável.
+# Comando Siri: "ei Siri, música em todo lugar"
+- name: "Música em todo lugar"
+  icon: mdi:speaker-multiple
+  entities:
+    media_player.sala:
+      state: "on"
+      source: "Spotify"   # nome da sua entrada 1
+      volume_level: 0.35  # ~30 de 87 no AAT
+    media_player.cozinha:
+      state: "on"
+      source: "Spotify"
+      volume_level: 0.35
+    media_player.quarto:
+      state: "on"
+      source: "Spotify"
+      volume_level: 0.30
+    media_player.varanda:
+      state: "on"
+      source: "Spotify"
+      volume_level: 0.40
+
+# Modo cinema — só a sala, volume alto, fonte da TV. Demais zonas desligadas.
+# Comando Siri: "ei Siri, modo cinema"
+- name: "Modo cinema"
+  icon: mdi:movie-open
+  entities:
+    media_player.sala:
+      state: "on"
+      source: "TV"        # nome da sua entrada 2
+      volume_level: 0.55  # ~48 de 87 no AAT
+    media_player.cozinha:
+      state: "off"
+    media_player.quarto:
+      state: "off"
+    media_player.varanda:
+      state: "off"
+
+# Festa — todas as zonas no talo com a fonte 1.
+# Comando Siri: "ei Siri, festa"
+- name: "Festa"
+  icon: mdi:party-popper
+  entities:
+    media_player.sala:
+      state: "on"
+      source: "Spotify"
+      volume_level: 0.70
+    media_player.cozinha:
+      state: "on"
+      source: "Spotify"
+      volume_level: 0.70
+    media_player.quarto:
+      state: "on"
+      source: "Spotify"
+      volume_level: 0.55
+    media_player.varanda:
+      state: "on"
+      source: "Spotify"
+      volume_level: 0.75
+
+# Boa noite — desliga tudo.
+# Comando Siri: "ei Siri, boa noite"
+# Bonus: dá pra deixar essa cena em uma automação que dispara à 23h.
+- name: "Boa noite"
+  icon: mdi:weather-night
+  entities:
+    media_player.sala:
+      state: "off"
+    media_player.cozinha:
+      state: "off"
+    media_player.quarto:
+      state: "off"
+    media_player.varanda:
+      state: "off"
+
+# Trocar todas para a TV — útil quando você passa o som da TV para a casa
+# inteira. Não desliga zonas que já estavam tocando.
+# Comando Siri: "ei Siri, som da TV"
+- name: "Som da TV em tudo"
+  icon: mdi:television
+  entities:
+    media_player.sala:
+      state: "on"
+      source: "TV"
+      volume_level: 0.40
+    media_player.cozinha:
+      state: "on"
+      source: "TV"
+      volume_level: 0.35
+    media_player.quarto:
+      state: "on"
+      source: "TV"
+      volume_level: 0.30
+    media_player.varanda:
+      state: "on"
+      source: "TV"
+      volume_level: 0.40
