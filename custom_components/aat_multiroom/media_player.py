@@ -36,7 +36,11 @@ SUPPORTED_FEATURES = (
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.VOLUME_SET
     | MediaPlayerEntityFeature.VOLUME_STEP
-    | MediaPlayerEntityFeature.VOLUME_MUTE
+    # VOLUME_MUTE intentionally omitted: when present, the HomeKit Bridge
+    # exposes a separate Mute toggle which Apple Home renders as a duplicate
+    # power-like tile, confusing the layout. Mute via the AAT MUTEON/OFF
+    # protocol command is still available — just not surfaced through the
+    # media_player entity. Use volume_set 0 if you need silence.
     | MediaPlayerEntityFeature.SELECT_SOURCE
 )
 
@@ -69,9 +73,11 @@ class AatZoneMediaPlayer(CoordinatorEntity[AatCoordinator], MediaPlayerEntity):
 
     _attr_has_entity_name = True
     _attr_supported_features = SUPPORTED_FEATURES
-    # Hint for HomeKit Bridge: each zone is a speaker, not a TV.
-    # Apple Home renders a clean speaker tile (on/off + volume + source).
-    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    # Use TV class so HomeKit Bridge exposes each zone as a Television
+    # accessory in Apple Home — that's the only HA media-player rendering
+    # that includes a real volume slider in the Casa tile. SPEAKER class
+    # falls back to a basic on/off switch with no volume slider.
+    _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(
         self,
